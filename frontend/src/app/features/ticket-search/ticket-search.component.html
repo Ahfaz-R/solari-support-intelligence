@@ -1,0 +1,133 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">SOLARI SUPPORT INTELLIGENCE</p>
+      <h1>Support Ticket Search</h1>
+      <p class="subtitle">
+        Find historical support tickets and review their resolutions
+        to help troubleshoot new issues.
+      </p>
+    </div>
+  </header>
+
+  <section class="search-panel">
+    <h2>Search historical tickets</h2>
+    <p class="section-description">
+      Enter the incoming ticket details to find potentially relevant
+      historical resolutions.
+    </p>
+
+    <form (ngSubmit)="searchTickets()" #searchForm="ngForm">
+      <div class="field">
+        <label for="ticketId">Ticket ID <span class="optional">(optional)</span></label>
+        <input
+          id="ticketId"
+          name="ticketId"
+          type="text"
+          [(ngModel)]="ticketId"
+          placeholder="e.g. NT-1"
+        />
+      </div>
+
+      <div class="field">
+        <label for="subject">Subject <span class="optional">(optional)</span></label>
+        <input
+          id="subject"
+          name="subject"
+          type="text"
+          [(ngModel)]="subject"
+          placeholder="e.g. Password reset email not arriving"
+        />
+      </div>
+
+      <div class="field">
+        <label for="description">Description <span class="optional">(optional)</span></label>
+        <textarea
+          id="description"
+          name="description"
+          [(ngModel)]="description"
+          rows="4"
+          placeholder="Describe the issue reported by the customer..."
+        ></textarea>
+      </div>
+
+      <p class="hint">Provide at least one field to search.</p>
+
+      <div class="actions">
+        <button type="submit" [disabled]="loading()">
+          {{ loading() ? 'Searching...' : 'Search tickets' }}
+        </button>
+        <button
+          type="button"
+          class="secondary"
+          (click)="resetSearch()"
+          [disabled]="loading()"
+        >
+          Clear
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <div class="error-message" *ngIf="error()" role="alert">
+    {{ error() }}
+  </div>
+
+  <section class="results-section" *ngIf="searched()">
+    <div class="results-heading">
+      <div>
+        <h2>Search results</h2>
+        <p class="section-description">{{ message() }}</p>
+      </div>
+      <span
+        class="status-badge"
+        [class.no-matches]="matchStatus() === 'NO_MATCHES_FOUND'"
+      >
+        {{ matchStatus() === 'MATCHES_FOUND' ? 'Matches found' : matchStatus() }}
+      </span>
+    </div>
+
+    <div class="query-summary" *ngIf="query()">
+      <strong>Search query:</strong> {{ query() }}
+    </div>
+
+    <div class="empty-state" *ngIf="results().length === 0">
+      No historical tickets matched this search. Try adding more details.
+    </div>
+
+    <article class="ticket-card" *ngFor="let ticket of results()">
+      <div class="ticket-heading">
+        <div>
+          <span class="ticket-id">{{ ticket.ticketId }}</span>
+          <h3>{{ ticket.subject }}</h3>
+        </div>
+        <span class="ticket-status">{{ ticket.status }}</span>
+      </div>
+
+      <div class="ticket-meta">
+        <span>Category: {{ ticket.category }}</span>
+        <span>Created: {{ ticket.createdAt }}</span>
+        <span>Relevance score: {{ ticket.relevanceScore | number: '1.1-2' }}</span>
+      </div>
+
+      <div class="ticket-content">
+        <h4>Historical issue</h4>
+        <p>{{ ticket.description }}</p>
+      </div>
+
+      <div class="resolution">
+        <h4>Resolution notes</h4>
+        <p>{{ ticket.resolutionNotes || 'No resolution notes available.' }}</p>
+      </div>
+
+      <div class="tags" *ngIf="ticket.tags">
+        <strong>Tags:</strong> {{ ticket.tags }}
+      </div>
+    </article>
+
+    <p class="disclaimer" *ngIf="results().length > 0">
+      Historical matches are suggestions. Verify that a resolution applies
+      to the current ticket before using it.
+    </p>
+  </section>
+</div>

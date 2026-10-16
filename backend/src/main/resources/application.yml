@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: solari-support-intelligence
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/solari}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+solari:
+  ai:
+    provider: ${SOLARI_AI_PROVIDER:rules}
+    api-key: ${GOOGLE_API_KEY:}
+    model: ${SOLARI_AI_MODEL:gemini-2.5-flash}
