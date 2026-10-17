@@ -28,6 +28,40 @@ export interface TicketSearchResponse {
   matches: TicketSearchResult[];
 }
 
+export interface NewTicketRequest {
+  ticket_id: string;
+  subject: string;
+  description: string;
+}
+
+export interface TicketAnalysisRequest {
+  new_tickets: NewTicketRequest[];
+}
+
+export interface ResolutionRecommendation {
+  status: string;
+  provider: string;
+  confidence: string;
+  recommendedResolution: string | null;
+  rationale: string;
+  suggestedNextSteps: string[];
+  supportingTicketIds: string[];
+}
+
+export interface TicketAnalysisResult {
+  ticketId: string;
+  subject: string;
+  description: string;
+  matchStatus: string;
+  message: string;
+  matches: TicketSearchResult[];
+  recommendation: ResolutionRecommendation;
+}
+
+export interface TicketAnalysisResponse {
+  results: TicketAnalysisResult[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -39,6 +73,15 @@ export class SupportTicketService {
   ): Observable<TicketSearchResponse> {
     return this.http.post<TicketSearchResponse>(
       '/api/v1/tickets/search',
+      request
+    );
+  }
+
+  analyzeTickets(
+    request: TicketAnalysisRequest
+  ): Observable<TicketAnalysisResponse> {
+    return this.http.post<TicketAnalysisResponse>(
+      '/api/v1/tickets/analyze',
       request
     );
   }

@@ -1,1 +1,36 @@
 <router-outlet></router-outlet>
+<div class="app-shell">
+  <header class="app-header">
+    <nav class="app-nav" aria-label="Main navigation">
+      <a class="brand" routerLink="/" aria-label="Solari Support Intelligence home">
+        <span class="brand-name">Solari</span>
+        <span class="brand-subtitle">Support Intelligence</span>
+      </a>
+
+      <div class="nav-links">
+        <a
+          routerLink="/"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          ariaCurrentWhenActive="page"
+        >
+          <span class="nav-number">01</span>
+          Ticket Search
+        </a>
+
+        <a
+          routerLink="/analysis"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+        >
+          <span class="nav-number">02</span>
+          Ticket Analysis
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="app-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
