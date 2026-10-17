@@ -1,0 +1,253 @@
+
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">SOLARI SUPPORT INTELLIGENCE</p>
+      <h1>Ticket Analysis</h1>
+      <p class="subtitle">
+        Analyze incoming support tickets, discover similar historical issues,
+        and review evidence-based resolution recommendations.
+      </p>
+    </div>
+  </header>
+
+  <section class="analysis-panel">
+    <h2>Analyze incoming tickets</h2>
+    <p class="section-description">
+      Upload a JSON file or edit the sample below. Each ticket must have a
+      ticket ID and a subject or description.
+    </p>
+
+    <form (ngSubmit)="analyzeTickets()">
+      <div class="field">
+        <label for="ticketJson">Incoming tickets JSON</label>
+        <textarea
+          id="ticketJson"
+          name="ticketJson"
+          [(ngModel)]="newTicketsJson"
+          rows="16"
+          spellcheck="false"
+          required
+          aria-describedby="jsonHelp"
+          placeholder='{"new_tickets": []}'
+        ></textarea>
+        <p id="jsonHelp" class="hint">
+          Expected format: an object containing a non-empty
+          <code>new_tickets</code> array. Maximum 50 tickets per request.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="ticketFile">Or load a JSON file</label>
+        <input
+          id="ticketFile"
+          type="file"
+          accept=".json,application/json"
+          (change)="onFileSelected($event)"
+          [disabled]="loading()"
+        />
+      </div>
+
+      <div class="actions">
+        <button type="submit" [disabled]="loading()">
+          {{ loading() ? 'Analyzing tickets...' : 'Analyze tickets' }}
+        </button>
+
+        <button
+          type="button"
+          class="secondary"
+          (click)="loadSample()"
+          [disabled]="loading()"
+        >
+          Load sample tickets
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <div *ngIf="error()" class="error-message" role="alert">
+    {{ error() }}
+  </div>
+
+  <section class="results-section" *ngIf="analyzed()">
+    <div class="results-heading">
+      <div>
+        <h2>Analysis results</h2>
+        <p class="section-description">
+          {{ results().length }} incoming ticket(s) analyzed.
+          Review historical evidence before applying a suggested resolution.
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="results().length === 0" class="empty-state">
+      The API returned no analysis results.
+    </div>
+
+    <article class="analysis-card" *ngFor="let result of results()">
+      <header class="ticket-heading">
+        <div>
+          <span class="ticket-id">{{ result.ticketId }}</span>
+          <h3>{{ result.subject || 'Untitled ticket' }}</h3>
+        </div>
+
+        <span
+          class="status-badge"
+          [class.no-matches]="result.matchStatus !== 'MATCHES_FOUND'"
+        >
+          {{ result.matchStatus === 'MATCHES_FOUND'
+            ? 'Historical matches found'
+            : result.matchStatus }}
+        </span>
+      </header>
+
+      <div class="ticket-content">
+        <h4>Incoming issue</h4>
+        <p>{{ result.description || 'No description provided.' }}</p>
+      </div>
+
+      <section
+        class="recommendation"
+        [class.insufficient]="
+          result.recommendation.status === 'INSUFFICIENT_EVIDENCE'
+        "
+      >
+        <div class="recommendation-heading">
+          <div>
+            <h4>Resolution recommendation</h4>
+            <p class="provider">
+              Provider:
+              <strong>{{ result.recommendation.provider }}</strong>
+            </p>
+          </div>
+
+          <span
+            class="confidence-badge"
+            [class.high]="result.recommendation.confidence === 'HIGH'"
+            [class.medium]="result.recommendation.confidence === 'MEDIUM'"
+            [class.low]="result.recommendation.confidence === 'LOW'"
+            [class.insufficient-badge]="
+              result.recommendation.confidence === 'INSUFFICIENT'
+            "
+          >
+            {{ result.recommendation.confidence }} confidence
+          </span>
+        </div>
+
+        <div
+          *ngIf="result.recommendation.recommendedResolution as resolution;
+                 else insufficientEvidence"
+          class="recommended-resolution"
+        >
+          <h5>Suggested resolution</h5>
+          <p>{{ resolution }}</p>
+        </div>
+
+        <ng-template #insufficientEvidence>
+          <div class="evidence-warning">
+            <strong>No reliable resolution recommendation</strong>
+            <p>
+              The available historical evidence is insufficient to recommend
+              a resolution. Investigate the issue before applying a fix.
+            </p>
+          </div>
+        </ng-template>
+
+        <div class="rationale">
+          <h5>Why this recommendation?</h5>
+          <p>{{ result.recommendation.rationale }}</p>
+        </div>
+
+        <div
+          class="next-steps"
+          *ngIf="result.recommendation.suggestedNextSteps.length > 0"
+        >
+          <h5>Suggested next steps</h5>
+          <ol>
+            <li
+              *ngFor="
+                let step of result.recommendation.suggestedNextSteps
+              "
+            >
+              {{ step }}
+            </li>
+          </ol>
+        </div>
+
+        <div
+          class="supporting-tickets"
+          *ngIf="result.recommendation.supportingTicketIds.length > 0"
+        >
+          <h5>Supporting historical tickets</h5>
+          <span
+            class="supporting-ticket-id"
+            *ngFor="
+              let ticketId of result.recommendation.supportingTicketIds
+            "
+          >
+            {{ ticketId }}
+          </span>
+        </div>
+
+        <p class="recommendation-disclaimer">
+          Recommendations are advisory. Verify the historical evidence and
+          confirm that any proposed resolution applies to the current issue.
+        </p>
+      </section>
+
+      <section class="matches-section">
+        <div class="matches-heading">
+          <h4>Similar historical tickets</h4>
+          <span class="match-count">
+            {{ result.matches.length }} match(es)
+          </span>
+        </div>
+
+        <div
+          *ngIf="result.matches.length === 0"
+          class="empty-state compact"
+        >
+          No sufficiently relevant historical tickets were found.
+        </div>
+
+        <article
+          class="historical-card"
+          *ngFor="let ticket of result.matches"
+        >
+          <div class="ticket-heading">
+            <div>
+              <span class="ticket-id">{{ ticket.ticketId }}</span>
+              <h5>{{ ticket.subject }}</h5>
+            </div>
+            <span class="ticket-status">{{ ticket.status }}</span>
+          </div>
+
+          <div class="ticket-meta">
+            <span>Category: {{ ticket.category || 'Uncategorized' }}</span>
+            <span>Created: {{ ticket.createdAt }}</span>
+            <span>
+              Relevance score:
+              {{ ticket.relevanceScore | number: '1.1-2' }}
+            </span>
+          </div>
+
+          <div class="ticket-content">
+            <h5>Historical issue</h5>
+            <p>{{ ticket.description }}</p>
+          </div>
+
+          <div class="historical-resolution">
+            <h5>Recorded resolution</h5>
+            <p>
+              {{ ticket.resolutionNotes || 'No resolution notes available.' }}
+            </p>
+          </div>
+
+          <p class="tags" *ngIf="ticket.tags">
+            <strong>Tags:</strong> {{ ticket.tags }}
+          </p>
+        </article>
+      </section>
+    </article>
+  </section>
+</div>
